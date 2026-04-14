@@ -1,12 +1,15 @@
 """
-Busca processo judicial no Escavador usando Playwright.
-Uso: python buscar_processo.py "0840531-51.2024.8.18.0140" "chat_id"
+Busca processo judicial no Escavador usando Playwright com login.
+Uso: python buscar_processo.py "1008837-57.2024.8.26.0011" "chat_id"
 """
 import sys
 import json
 import asyncio
 import re
 from playwright.async_api import async_playwright
+
+EMAIL = "lucasmelosiqueira1@gmail.com"
+SENHA = "Isabela1999!"
 
 async def buscar(numero_processo, chat_id):
     async with async_playwright() as p:
@@ -17,29 +20,28 @@ async def buscar(numero_processo, chat_id):
         page = await context.new_page()
 
         try:
-            await page.goto("https://www.escavador.com/processos", wait_until="domcontentloaded", timeout=30000)
+            # Login no Escavador
+            await page.goto("https://www.escavador.com/login", wait_until="domcontentloaded", timeout=30000)
+            await page.wait_for_timeout(2000)
+
+            await page.fill("input[type=email], input[name=email]", EMAIL)
+            await page.fill("input[type=password], input[name=password]", SENHA)
+            await page.keyboard.press("Enter")
             await page.wait_for_timeout(3000)
 
-            # Aceita cookies se aparecer
-            try:
-                await page.click("text=Continuar", timeout=3000)
-                await page.wait_for_timeout(1500)
-            except:
-                pass
+            # Busca o processo
+            await page.goto("https://www.escavador.com/processos", wait_until="domcontentloaded", timeout=30000)
+            await page.wait_for_timeout(2000)
 
-            # Preenche o campo de busca pelo id correto
             await page.fill("#search-box-input", numero_processo)
             await page.keyboard.press("Enter")
             await page.wait_for_timeout(5000)
 
             texto = await page.evaluate("() => document.body.innerText")
-
             await browser.close()
 
-            # Extrai apenas a parte relevante do texto
             linhas = [l.strip() for l in texto.split('\n') if l.strip()]
 
-            # Procura pelo bloco do processo
             inicio = -1
             for i, linha in enumerate(linhas):
                 if numero_processo in linha or numero_processo.replace("-","").replace(".","") in linha.replace("-","").replace(".",""):
@@ -47,17 +49,16 @@ async def buscar(numero_processo, chat_id):
                     break
 
             if inicio >= 0:
-                bloco = '\n'.join(linhas[inicio:inicio+30])
+                bloco = '\n'.join(linhas[inicio:inicio+40])
             else:
-                # Pega qualquer resultado relevante
-                bloco = '\n'.join(linhas[:40])
+                bloco = '\n'.join(linhas[:50])
 
             resposta = f"Processo {numero_processo}\n\n{bloco}"
 
             return {
                 "chat_id": chat_id,
                 "process_number": numero_processo,
-                "response": resposta[:3000]
+                "response": resposta[:4000]
             }
 
         except Exception as e:
@@ -69,7 +70,7 @@ async def buscar(numero_processo, chat_id):
             }
 
 if __name__ == "__main__":
-    numero = sys.argv[1] if len(sys.argv) > 1 else "0840531-51.2024.8.18.0140"
+    numero = sys.argv[1] if len(sys.argv) > 1 else "1008837-57.2024.8.26.0011"
     chat_id = sys.argv[2] if len(sys.argv) > 2 else "test"
     result = asyncio.run(buscar(numero, chat_id))
     sys.stdout.buffer.write(json.dumps(result, ensure_ascii=False, indent=2).encode("utf-8"))
