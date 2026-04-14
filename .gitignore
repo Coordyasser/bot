@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+*.pyo
+*.log
+offset.txt
+ngrok_url.txt
+*.session
+.env
+telegram-bot/daemon.log
+telegram-bot/ngrok.log
