@@ -10,7 +10,7 @@ import threading
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import urllib.request
 
-WORK_DIR = r"C:\Users\lucas\teste"
+WORK_DIR = os.path.dirname(os.path.abspath(__file__))
 N8N_WEBHOOK = "https://n8nevo-n8n-webhook.3fmybz.easypanel.host/webhook/b7185ac4-1129-4719-bb8e-c567b18b36a2"
 HTTP_PORT = 5055
 
